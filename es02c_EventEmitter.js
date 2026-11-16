@@ -1,35 +1,57 @@
 const EventEmitter = require('events');
 
 class Semaforo extends EventEmitter {
-  constructor() {
-    super();
-    this.stato = 'rosso';
-  }
-  
-  cambiaColore(nuovoColore) {
-    // TODO: Valida che il colore sia 'rosso', 'giallo' o 'verde'
-    
-    const vecchioStato = this.stato;
-    this.stato = nuovoColore;
-    
-    // TODO: Emetti l'evento 'cambio-colore' con vecchio e nuovo stato
-    
-    // TODO: Emetti anche eventi specifici: 'rosso', 'giallo', 'verde'
-  }
-  
-  avviaSequenza() {
-    // TODO: Implementa la sequenza automatica: verde -> giallo -> rosso -> verde...
-    // Usa setInterval con intervalli di 3 secondi
-  }
+	constructor() {
+		super();
+		this.stato = 'rosso';
+	}
+	
+	cambiaColore(nuovoColore) {
+		
+		
+		if(nuovoColore != 'rosso' && nuovoColore != 'giallo' && nuovoColore != 'verde'){
+			this.stato = 'rosso';	// verifico che lo stato è uno dei tre valori accettati, se non lo è lo imposto su rosso
+			return;
+		}
+		
+		const vecchioStato = this.stato;
+		this.stato = nuovoColore;
+		
+		
+		this.emit('cambio-colore', vecchioStato, nuovoColore); //emetto cambio-colore con il vecchio e il nuovo colore come parametri per poi stamparli
+
+		this.emit(nuovoColore);	// emetto l'evento del colore specifico nuovo
+	}
+	
+	avviaSequenza() {
+		const colori = ['verde','giallo','rosso'];
+		let i = 0;
+		setInterval(
+			()=>{	// primo parametro
+				this.cambiaColore(colori[i]);
+				i++;
+				if(i>colori.length-1){	//ricomincio la sequenza
+					i = 0;
+				}
+			},
+			3000	// secondo parametro di setInterval
+		);
+	}
 }
 
-// TODO: Crea istanza e aggiungi listener
+
 const semaforo = new Semaforo();
+let conta = 0;	// conta quante volte è cambiato
 
-// TODO: Listener per ogni cambio colore
+semaforo.on('cambio-colore', (vecchioStato, nuovoColore) => {console.log(vecchioStato + ' -> ' + nuovoColore);});	// stampo il vecchio e il nuovo colore quando cambia
 
-// TODO: Listener specifico per 'rosso' che avvisa "STOP!"
+semaforo.on('rosso', () => {console.log('STOP!');});	//questo viene stampato quando il semaforo diventa rosso
 
-// TODO: Listener che conta i cambi (usa once per il primo cambio)
+semaforo.once('cambio-colore', () => {console.log('primo cambio');});	//questo viene stampato solo la prima volta
 
-// TODO: Avvia la sequenza automatica
+semaforo.on('cambio-colore', () => {
+	conta++;	// incremento e stampo la conta
+	console.log('colore cambiato ' + conta + ' volte');
+});
+
+semaforo.avviaSequenza();	// avvio la sequenza del semaforo
